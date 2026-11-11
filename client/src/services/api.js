@@ -1,3 +1,4 @@
+
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const api = {
@@ -21,7 +22,10 @@ export const api = {
   changePassword: async (token, currentPassword, newPassword) => {
     const res = await fetch(`${BASE_URL}/auth/change-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify({ currentPassword, newPassword })
     });
     return res.json();
@@ -36,7 +40,10 @@ export const api = {
   updateRestaurantInfo: async (token, data) => {
     const res = await fetch(`${BASE_URL}/restaurant`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify(data)
     });
     return res.json();
@@ -51,14 +58,19 @@ export const api = {
 
   // Categories
   getCategories: async () => {
-    const res = await fetch(`${BASE_URL}/categories`);
+    const res = await fetch(`${BASE_URL}/categories`, {
+      cache: 'no-store'
+    });
     return res.json();
   },
 
   createCategory: async (token, data) => {
     const res = await fetch(`${BASE_URL}/categories`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify(data)
     });
     return res.json();
@@ -67,7 +79,10 @@ export const api = {
   updateCategory: async (token, id, data) => {
     const res = await fetch(`${BASE_URL}/categories/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
       body: JSON.stringify(data)
     });
     return res.json();
@@ -83,13 +98,29 @@ export const api = {
 
   // Menu Items
   getMenuItems: async (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${BASE_URL}/menu${query ? `?${query}` : ''}`);
+    const queryParams = new URLSearchParams({
+      ...params,
+      _t: Date.now().toString()
+    });
+
+    const res = await fetch(
+      `${BASE_URL}/menu?${queryParams.toString()}`,
+      {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      }
+    );
+
     return res.json();
   },
 
   getMenuItem: async (id) => {
-    const res = await fetch(`${BASE_URL}/menu/${id}`);
+    const res = await fetch(`${BASE_URL}/menu/${id}`, {
+      cache: 'no-store'
+    });
     return res.json();
   },
 
@@ -140,6 +171,7 @@ export const api = {
     const params = new URLSearchParams();
     if (url) params.set('url', url);
     if (tableNumber) params.set('tableNumber', tableNumber);
+
     const res = await fetch(`${BASE_URL}/qr/generate?${params}`);
     return res.json();
   }

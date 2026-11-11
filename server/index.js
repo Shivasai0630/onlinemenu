@@ -27,20 +27,36 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Middleware
+// CORS configuration
+const allowedOrigins = [
+  'https://onlinemenu-gamma.vercel.app',
+  'https://onlinemenu-q9ivrd8il-banty8.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:5173'
+];
+
+// Add the configured frontend URL from Render environment variables
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL.replace(/\/$/, ''));
+}
+
 app.use(cors({
-  origin: [
-    process.env.CLIENT_URL || 'http://localhost:5173',
-    'http://localhost:5173',
-    'http://localhost:4173',
-    'http://127.0.0.1:5173'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests without an Origin header (health checks, server tools)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    console.warn('Blocked by CORS:', origin);
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(uploadsDir));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -79,7 +95,7 @@ app.use((err, req, res, next) => {
 async function initDB() {
   try {
     await sequelize.sync({ alter: true });
-    console.log('✅ Database synchronized successfully.');
+    console.log('Database synchronized successfully.');
 
     // Create admin if it doesn't exist
     const adminCount = await User.count();
@@ -95,9 +111,9 @@ async function initDB() {
         role: 'admin'
       });
 
-      console.log('✅ Admin user created.');
+      console.log('Admin user created.');
     } else {
-      console.log('ℹ️ Admin user already exists.');
+      console.log('Admin user already exists.');
     }
 
     // Create restaurant information if missing
@@ -105,32 +121,31 @@ async function initDB() {
 
     if (infoCount === 0) {
       await RestaurantInfo.create({ id: 1 });
-      console.log('✅ Restaurant information created.');
+      console.log('Restaurant information created.');
     }
 
     // Create categories if missing
     const categoryCount = await Category.count();
 
     if (categoryCount === 0) {
-      console.log('🌱 Creating default categories...');
+      console.log('Creating default categories...');
 
       for (const cat of defaultCategories) {
         await Category.create(cat);
       }
 
-      console.log(`✅ ${defaultCategories.length} categories created.`);
+      console.log(`${defaultCategories.length} categories created.`);
     } else {
-      console.log(`ℹ️ ${categoryCount} categories already exist.`);
+      console.log(`${categoryCount} categories already exist.`);
     }
 
-    // IMPORTANT: Seed menu items independently of categories
+    // Seed menu items independently of categories
     const menuCount = await MenuItem.count();
 
     if (menuCount === 0) {
-      console.log('🌱 Seeding default menu items...');
+      console.log('Seeding default menu items...');
 
       const categories = await Category.findAll();
-
       const catMap = {};
 
       categories.forEach(category => {
@@ -147,19 +162,18 @@ async function initDB() {
             categoryId
           });
         } else {
-          console.warn(`⚠️ Category not found: ${categoryName}`);
+          console.warn(`Category not found: ${categoryName}`);
         }
       }
 
       const finalMenuCount = await MenuItem.count();
-
-      console.log(`✅ Successfully seeded ${finalMenuCount} menu items.`);
+      console.log(`Successfully seeded ${finalMenuCount} menu items.`);
     } else {
-      console.log(`ℹ️ Menu already contains ${menuCount} items.`);
+      console.log(`Menu already contains ${menuCount} items.`);
     }
 
   } catch (error) {
-    console.error('❌ Database initialization error:', error);
+    console.error('Database initialization error:', error);
     throw error;
   }
 }
@@ -170,16 +184,16 @@ async function startServer() {
     await initDB();
 
     await sequelize.authenticate();
-    console.log('✅ Database connected successfully.');
+    console.log('Database connected successfully.');
 
     app.listen(PORT, () => {
-      console.log('\n🍽️ THE LAVISH RESTAURANT API');
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log('✅ Backend ready!\n');
+      console.log('\nTHE LAVISH RESTAURANT API');
+      console.log(`Server running on port ${PORT}`);
+      console.log('Backend ready!\n');
     });
 
   } catch (error) {
-    console.error('❌ Server startup failed:', error);
+    console.error('Server startup failed:', error);
     process.exit(1);
   }
 }

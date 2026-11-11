@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -22,7 +23,9 @@ const PORT = process.env.PORT || 5000;
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // Middleware
 app.use(cors({
@@ -34,6 +37,7 @@ app.use(cors({
   ],
   credentials: true
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -47,84 +51,130 @@ app.use('/api/qr', qrRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'The Lavish Restaurant API is running.', timestamp: new Date().toISOString() });
+  res.json({
+    success: true,
+    message: 'The Lavish Restaurant API is running.',
+    timestamp: new Date().toISOString()
+  });
 });
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found.' });
+  res.status(404).json({
+    success: false,
+    message: 'Route not found.'
+  });
 });
 
 // Error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err.stack);
-  res.status(500).json({ success: false, message: err.message || 'Internal server error.' });
+  res.status(500).json({
+    success: false,
+    message: err.message || 'Internal server error.'
+  });
 });
 
-// Initialize DB and seed data
+// Initialize database and seed default data
 async function initDB() {
   try {
     await sequelize.sync({ alter: true });
     console.log('✅ Database synchronized successfully.');
 
-    // Create default admin user if not exists
+    // Create admin if it doesn't exist
     const adminCount = await User.count();
+
     if (adminCount === 0) {
+      if (!process.env.ADMIN_PASSWORD) {
+        throw new Error('ADMIN_PASSWORD is missing in environment variables.');
+      }
+
       await User.create({
         username: process.env.ADMIN_USERNAME || 'admin',
-        password: process.env.ADMIN_PASSWORD || 'lavish@admin123',
+        password: process.env.ADMIN_PASSWORD,
         role: 'admin'
       });
-      console.log('✅ Default admin user created. Username: admin | Password: lavish@admin123');
+
+      console.log('✅ Admin user created.');
+    } else {
+      console.log('ℹ️ Admin user already exists.');
     }
 
-    // Create default restaurant info if not exists
+    // Create restaurant information if missing
     const infoCount = await RestaurantInfo.count();
+
     if (infoCount === 0) {
       await RestaurantInfo.create({ id: 1 });
-      console.log('✅ Default restaurant info created.');
+      console.log('✅ Restaurant information created.');
     }
 
-    // Seed categories and menu items
+    // Create categories if missing
     const categoryCount = await Category.count();
+
     if (categoryCount === 0) {
-      console.log('🌱 Seeding default categories and menu items...');
+      console.log('🌱 Creating default categories...');
+
       for (const cat of defaultCategories) {
         await Category.create(cat);
       }
+
+      console.log(`✅ ${defaultCategories.length} categories created.`);
+    } else {
+      console.log(`ℹ️ ${categoryCount} categories already exist.`);
+    }
+
+    // IMPORTANT: Seed menu items independently of categories
+    const menuCount = await MenuItem.count();
+
+    if (menuCount === 0) {
+      console.log('🌱 Seeding default menu items...');
+
       const categories = await Category.findAll();
+
       const catMap = {};
-      categories.forEach(c => { catMap[c.name] = c.id; });
+
+      categories.forEach(category => {
+        catMap[category.name] = category.id;
+      });
 
       for (const item of defaultMenuItems) {
-        const catId = catMap[item.categoryName];
-        if (catId) {
-          await MenuItem.create({ ...item, categoryId: catId });
+        const { categoryName, ...menuItem } = item;
+        const categoryId = catMap[categoryName];
+
+        if (categoryId) {
+          await MenuItem.create({
+            ...menuItem,
+            categoryId
+          });
+        } else {
+          console.warn(`⚠️ Category not found: ${categoryName}`);
         }
       }
-      console.log(`✅ Seeded ${defaultMenuItems.length} menu items across ${defaultCategories.length} categories.`);
+
+      const finalMenuCount = await MenuItem.count();
+
+      console.log(`✅ Successfully seeded ${finalMenuCount} menu items.`);
+    } else {
+      console.log(`ℹ️ Menu already contains ${menuCount} items.`);
     }
+
   } catch (error) {
     console.error('❌ Database initialization error:', error);
+    throw error;
   }
 }
 
-
+// Start server
 async function startServer() {
   try {
-    // Initialize database and seed default data
     await initDB();
 
-    // Verify database connection
     await sequelize.authenticate();
-
     console.log('✅ Database connected successfully.');
 
-    // Start Express server
     app.listen(PORT, () => {
       console.log('\n🍽️ THE LAVISH RESTAURANT API');
-      console.log(`🚀 Server running on http://localhost:${PORT}`);
-      console.log(`📊 Admin Dashboard: http://localhost:5173/admin`);
+      console.log(`🚀 Server running on port ${PORT}`);
       console.log('✅ Backend ready!\n');
     });
 

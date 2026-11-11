@@ -109,10 +109,29 @@ async function initDB() {
   }
 }
 
-app.listen(PORT, async () => {
-  console.log(`\n🍽️  THE LAVISH RESTAURANT API`);
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 Admin Dashboard: http://localhost:5173/admin`);
-  console.log(`🔑 Admin Login: admin / lavish@admin123\n`);
-  await initDB();
-});
+
+async function startServer() {
+  try {
+    // Initialize database and seed default data
+    await initDB();
+
+    // Verify database connection
+    await sequelize.authenticate();
+
+    console.log('✅ Database connected successfully.');
+
+    // Start Express server
+    app.listen(PORT, () => {
+      console.log('\n🍽️ THE LAVISH RESTAURANT API');
+      console.log(`🚀 Server running on http://localhost:${PORT}`);
+      console.log(`📊 Admin Dashboard: http://localhost:5173/admin`);
+      console.log('✅ Backend ready!\n');
+    });
+
+  } catch (error) {
+    console.error('❌ Server startup failed:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

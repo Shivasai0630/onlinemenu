@@ -1,0 +1,15 @@
+# Ignore all environment files
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Allow example files
+!.env.example
+**/.env.example
+
+# Ignore dependencies
+node_modules/
+
+# Ignore build files
+client/dist/

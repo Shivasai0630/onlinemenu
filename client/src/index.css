@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-lavish-dark text-lavish-cream font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-lavish-dark;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-lavish-goldMuted rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-lavish-gold;
+  }
+
+  ::selection {
+    @apply bg-lavish-gold text-lavish-dark;
+  }
+}
+
+@layer components {
+  .gold-text {
+    @apply bg-gold-gradient bg-clip-text text-transparent;
+  }
+
+  .gold-border {
+    border: 1px solid;
+    border-image: linear-gradient(135deg, #F5D77F, #D4AF37, #AA8839) 1;
+  }
+
+  .btn-gold {
+    @apply relative overflow-hidden bg-gold-gradient text-lavish-dark font-semibold rounded-sm
+           px-6 py-3 transition-all duration-300 hover:shadow-gold-glow hover:scale-105
+           active:scale-95 font-sans tracking-wide;
+  }
+
+  .btn-gold-outline {
+    @apply relative overflow-hidden border border-lavish-gold text-lavish-gold font-semibold 
+           rounded-sm px-6 py-3 transition-all duration-300 hover:bg-lavish-gold 
+           hover:text-lavish-dark hover:shadow-gold-glow active:scale-95 font-sans tracking-wide;
+  }
+
+  .card-luxury {
+    @apply bg-lavish-card border border-lavish-border rounded-lg overflow-hidden 
+           transition-all duration-300 hover:border-lavish-borderGold hover:shadow-luxury;
+  }
+
+  .section-title {
+    @apply font-cinzel text-3xl md:text-4xl font-bold tracking-widest gold-text uppercase;
+  }
+
+  .divider-gold {
+    @apply flex items-center gap-4 my-2;
+  }
+  .divider-gold::before,
+  .divider-gold::after {
+    content: '';
+    @apply flex-1 h-px bg-gradient-to-r from-transparent to-lavish-goldMuted;
+  }
+  .divider-gold::after {
+    @apply bg-gradient-to-l from-transparent to-lavish-goldMuted;
+  }
+
+  .input-luxury {
+    @apply bg-lavish-dark border border-lavish-border text-lavish-cream rounded-sm px-4 py-3
+           focus:outline-none focus:border-lavish-gold transition-colors duration-200 w-full
+           placeholder-lavish-creamMuted;
+  }
+
+  .navbar-blur {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: rgba(11, 11, 12, 0.92);
+  }
+  
+  .hero-overlay {
+    background: linear-gradient(to bottom, 
+      rgba(11,11,12,0.3) 0%, 
+      rgba(11,11,12,0.5) 40%,
+      rgba(11,11,12,0.85) 80%,
+      rgba(11,11,12,1) 100%
+    );
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, #1A181C 25%, #231F24 50%, #1A181C 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(32px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .veg-dot {
+    @apply w-4 h-4 rounded-sm border-2 border-green-500 flex items-center justify-center flex-shrink-0;
+  }
+  .veg-dot::after {
+    content: '';
+    @apply w-2 h-2 rounded-full bg-green-500 block;
+  }
+
+  .nonveg-dot {
+    @apply w-4 h-4 rounded-sm border-2 border-red-500 flex items-center justify-center flex-shrink-0;
+  }
+  .nonveg-dot::after {
+    content: '';
+    @apply w-0 h-0 block;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 7px solid #ef4444;
+  }
+
+  .egg-dot {
+    @apply w-4 h-4 rounded-sm border-2 border-yellow-500 flex items-center justify-center flex-shrink-0;
+  }
+  .egg-dot::after {
+    content: '';
+    @apply w-2 h-2 rounded-full bg-yellow-500 block;
+  }
+}
